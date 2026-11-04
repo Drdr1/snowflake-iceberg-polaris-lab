@@ -28,5 +28,9 @@ expect() {  # expect WANT GOT LABEL
 expect 200 "$(status GET /namespaces)" "reader lists namespaces"
 expect 403 "$(status POST /namespaces '{"namespace":["reader_should_not_create"]}')" "reader creates namespace"
 expect 403 "$(status DELETE /namespaces/lab)" "reader drops namespace"
+# lab.orders exists: CI runs spark.load_demo before this check.
+expect 200 "$(status GET /namespaces/lab/tables/orders)" "reader loads table metadata"
+expect 403 "$(status POST /namespaces/lab/tables '{"name":"reader_table","schema":{"type":"struct","fields":[{"id":1,"name":"x","type":"int","required":false}]}}')" "reader creates table"
+expect 403 "$(status DELETE /namespaces/lab/tables/orders)" "reader drops table"
 
 exit $fail

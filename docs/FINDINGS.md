@@ -14,7 +14,7 @@ What has actually been run, where, and what it showed. Nothing goes in the
 | Metadata consistency checker catches missing files | ✅ tests | ✅ tests | — |
 | Spark ⇄ PyIceberg through one REST catalog | — | ✅ tests | — |
 | Concurrent writers, stale metadata | — | ✅ tests | — |
-| Read-only principal enforced by Polaris RBAC | — | ✅ `check_reader.sh` | ⏳ pending |
+| Read-only principal enforced by Polaris RBAC | — | ✅ `check_reader.sh` (list/load 200, create/drop 403) | ⏳ pending |
 | Snowflake external volume + IAM handshake | — | — | ⏳ pending |
 | Snowflake OBJECT_STORE integration | — | — | ⏳ pending |
 | Snowflake ICEBERG_REST → Polaris, vended credentials | — | — | ⏳ pending |
@@ -39,6 +39,18 @@ What has actually been run, where, and what it showed. Nothing goes in the
   longer be read.
 - **A stale writer cannot overwrite a newer commit.** The catalog validates
   the writer's base snapshot, so no rows are lost when two engines write.
+- **Polaris `*_FULL_METADATA` privileges are not read-only.** The first
+  version of the Snowflake "reader" role had `NAMESPACE_FULL_METADATA` and
+  `TABLE_FULL_METADATA`. CI showed that principal could create a namespace and
+  attempt drops. The fix grants only `CATALOG_READ_PROPERTIES`,
+  `NAMESPACE_LIST`, `NAMESPACE_READ_PROPERTIES`, `TABLE_LIST`,
+  `TABLE_READ_PROPERTIES` and `TABLE_READ_DATA`. `polaris/check_reader.sh`
+  now proves list/load succeed and create/drop return 403.
+- **Compaction rewrites into the current partition spec, which can add files.**
+  In the demo, months → days evolution then `rewrite_data_files` moved the old
+  month-partitioned data into daily partitions: 62 data files became 119 for
+  10,400 rows, with the same fingerprint. Compaction cannot fix a spec that is
+  too fine for the data volume; choose the partition grain from row counts first.
 - **A catalog-less read needs its own storage credentials.** Reading a table
   straight from its metadata.json (how outside engines read Snowflake-managed
   tables) bypasses Polaris, so there is no credential vending: the first CI

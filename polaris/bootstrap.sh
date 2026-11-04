@@ -66,7 +66,10 @@ api PUT "/catalogs/$CATALOG/catalog-roles/catalog_admin/grants" \
 echo "Creating read-only path for Snowflake ..."
 api POST /principal-roles '{"principalRole": {"name": "snowflake_reader_role"}}' >/dev/null
 api POST "/catalogs/$CATALOG/catalog-roles" '{"catalogRole": {"name": "reader"}}' >/dev/null
-for p in TABLE_READ_DATA TABLE_LIST NAMESPACE_LIST TABLE_FULL_METADATA NAMESPACE_FULL_METADATA CATALOG_READ_PROPERTIES; do
+# Careful: *_FULL_METADATA sounds read-only but includes CREATE/DROP of that
+# entity type. The first CI run proved it: a "reader" with NAMESPACE_FULL_METADATA
+# created a namespace. Grant the narrow read privileges only.
+for p in CATALOG_READ_PROPERTIES NAMESPACE_LIST NAMESPACE_READ_PROPERTIES TABLE_LIST TABLE_READ_PROPERTIES TABLE_READ_DATA; do
   api PUT "/catalogs/$CATALOG/catalog-roles/reader/grants" \
     "{\"grant\": {\"type\": \"catalog\", \"privilege\": \"$p\"}}" >/dev/null
 done
