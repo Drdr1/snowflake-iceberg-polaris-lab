@@ -1,0 +1,4 @@
+[tool.pytest.ini_options]
+testpaths=["tests"]
+pythonpath=["."]
+markers=["spark: needs Spark + Polaris (CI only)"]

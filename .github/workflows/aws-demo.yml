@@ -1,0 +1,47 @@
+name: aws-demo
+
+# Runs the Spark demo against the REAL Polaris on your VPS and real S3, so you
+# do not need Java/Spark on your own machine. Manual trigger only.
+#
+# Repository secrets needed (Settings -> Secrets and variables -> Actions):
+#   POLARIS_URI         https://<POLARIS_HOST>/api/catalog
+#   POLARIS_CREDENTIAL  root:<the secret from polaris.env>
+#   AWS_REGION          bucket region, e.g. us-east-1
+# No AWS keys: Polaris vends short-lived, table-scoped S3 credentials.
+
+on:
+  workflow_dispatch:
+    inputs:
+      step:
+        description: "create | evolve | maintain | all"
+        required: true
+        default: create
+
+jobs:
+  demo:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LAB_CATALOG: rest
+      S3_ENDPOINT: ""
+      POLARIS_URI: ${{ secrets.POLARIS_URI }}
+      POLARIS_CREDENTIAL: ${{ secrets.POLARIS_CREDENTIAL }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - run: pip install -r requirements.txt -r requirements-spark.txt
+      - name: Spark step
+        run: python -m spark.load_demo --step "${{ inputs.step }}" | tee demo.log
+      - name: Metadata path for Snowflake OBJECT_STORE (20_object_store_catalog.sql)
+        run: python -m lab.locate lab.orders
+      - name: PyIceberg read of the same table
+        run: |
+          spark_fp=$(grep '^snowflake compare string:' demo.log | tail -1 | cut -d: -f2 | tr -d ' ')
+          python -m lab.compare lab.orders --snowflake "$spark_fp"

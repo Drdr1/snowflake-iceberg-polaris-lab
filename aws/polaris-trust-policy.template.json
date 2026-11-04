@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": { "AWS": "arn:aws:iam::<AWS_ACCOUNT_ID>:user/polaris-lab-server" },
+      "Action": ["sts:AssumeRole", "sts:TagSession"],
+      "Condition": { "StringEquals": { "sts:ExternalId": "polaris_lab_external_id" } }
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.warehouse/
+.polaris-reader.env
+*.env
+!example.env
+snowflake/.local/
+# filled-in copies of aws/*.template.json
+aws/*-policy.json
+deploy/vps/polaris.env
+demo.log

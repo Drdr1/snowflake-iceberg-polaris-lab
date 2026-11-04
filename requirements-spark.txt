@@ -1,0 +1,2 @@
+# Spark side only (CI "stack" job). Spark 3.5 + Iceberg 1.10.1 runtime, Java 17.
+pyspark==3.5.9

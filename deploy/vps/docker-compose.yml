@@ -1,0 +1,23 @@
+# Polaris on a VPS, backed by real S3, reachable by Snowflake over HTTPS.
+# Put Caddy (or any TLS proxy) in front; see Caddyfile.example.
+#
+# Lab only: persistence is in-memory, so the catalog (not the S3 data) is
+# lost on restart -- re-run polaris/bootstrap.sh and re-register tables.
+# For anything longer-lived, switch Polaris to relational-jdbc (Postgres);
+# see the Polaris "JDBC" guide.
+services:
+  polaris:
+    image: apache/polaris:${POLARIS_VERSION:-latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8181:8181"   # only the TLS proxy talks to it
+      - "127.0.0.1:8182:8182"
+    env_file: polaris.env
+    environment:
+      polaris.realm-context.realms: POLARIS
+      quarkus.otel.sdk.disabled: "true"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8182/q/health"]
+      interval: 5s
+      retries: 30
+      start_period: 15s

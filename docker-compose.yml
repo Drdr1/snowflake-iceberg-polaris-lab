@@ -1,0 +1,59 @@
+# Local stand-in for the AWS side: MinIO plays S3, Apache Polaris is the
+# Iceberg REST catalog. Spark and PyIceberg run on the host and talk to both.
+#
+# Based on Apache Polaris' own MinIO guide (site/content/guides/minio).
+# Credentials below are lab-only defaults; never reuse them anywhere real.
+
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # console
+    environment:
+      MINIO_ROOT_USER: minio_root
+      MINIO_ROOT_PASSWORD: m1n1opwd
+    command: ["server", "/data", "--console-address", ":9001"]
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
+      interval: 2s
+      timeout: 10s
+      retries: 30
+
+  create-bucket:
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set lab http://minio:9000 minio_root m1n1opwd &&
+        mc mb --ignore-existing lab/lakehouse &&
+        echo bucket ready
+
+  polaris:
+    image: apache/polaris:${POLARIS_VERSION:-latest}
+    ports:
+      - "8181:8181"   # Iceberg REST + management API
+      - "8182:8182"   # health / metrics
+    depends_on:
+      minio:
+        condition: service_healthy
+      create-bucket:
+        condition: service_completed_successfully
+    environment:
+      AWS_REGION: us-west-2
+      # Polaris uses these against MinIO's STS to vend scoped credentials,
+      # the same mechanism Snowflake uses with VENDED_CREDENTIALS.
+      AWS_ACCESS_KEY_ID: minio_root
+      AWS_SECRET_ACCESS_KEY: m1n1opwd
+      POLARIS_BOOTSTRAP_CREDENTIALS: POLARIS,root,s3cr3t
+      polaris.realm-context.realms: POLARIS
+      quarkus.otel.sdk.disabled: "true"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8182/q/health"]
+      interval: 2s
+      timeout: 10s
+      retries: 60
+      start_period: 10s

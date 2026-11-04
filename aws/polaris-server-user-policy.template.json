@@ -1,0 +1,11 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "OnlyAssumeTheLabRole",
+      "Effect": "Allow",
+      "Action": ["sts:AssumeRole", "sts:TagSession"],
+      "Resource": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/polaris-iceberg-lab"
+    }
+  ]
+}
