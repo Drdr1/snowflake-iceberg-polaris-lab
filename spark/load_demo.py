@@ -13,10 +13,17 @@ After every step the Spark-side fingerprint is printed for lab.compare.
 from __future__ import annotations
 
 import argparse
+import datetime as _dt
 import json
 
 from lab.data import orders
 from spark.session import CATALOG, SPARK_ORDERS_DDL, arrow_to_spark, spark_fingerprint
+
+
+def _utc_now() -> str:
+    # Iceberg procedure arguments must be literals, not current_timestamp().
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+
 
 TABLE = "lab.orders"
 FQ = f"{CATALOG}.{TABLE}"
@@ -50,10 +57,12 @@ def evolve(spark) -> None:
 
 
 def maintain(spark) -> None:
-    spark.sql(f"CALL {CATALOG}.system.rewrite_data_files(table => '{TABLE}', options => map('min-input-files', '2'))").show(truncate=False)
+    spark.sql(
+        f"CALL {CATALOG}.system.rewrite_data_files(table => '{TABLE}', options => map('min-input-files', '2'))"
+    ).show(truncate=False)
     spark.sql(
         f"CALL {CATALOG}.system.expire_snapshots(table => '{TABLE}', "
-        f"older_than => current_timestamp(), retain_last => 3)"
+        f"older_than => TIMESTAMP '{_utc_now()}', retain_last => 3)"
     ).show(truncate=False)
 
 
@@ -73,7 +82,10 @@ def main(argv: list[str] | None = None) -> None:
         fp = spark_fingerprint(spark, TABLE)
         files = spark.sql(f"SELECT count(*) AS n FROM {FQ}.files").collect()[0]["n"]
         print(json.dumps({"step": name, "data_files": files, "spark_fingerprint": fp}))
-        print("snowflake compare string:", ",".join(str(fp[k]) for k in ("row_count", "min_order_id", "max_order_id", "amount_sum")))
+        print(
+            "snowflake compare string:",
+            ",".join(str(fp[k]) for k in ("row_count", "min_order_id", "max_order_id", "amount_sum")),
+        )
     spark.stop()
 
 

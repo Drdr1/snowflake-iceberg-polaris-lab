@@ -6,7 +6,6 @@ import datetime as dt
 import random
 
 import pyarrow as pa
-
 from pyiceberg.schema import Schema
 from pyiceberg.types import (
     DateType,

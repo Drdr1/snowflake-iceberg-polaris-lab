@@ -53,7 +53,9 @@ def main(argv: list[str] | None = None) -> int:
     iceberg_side = fingerprint(table)
     snowflake_side = parse_snowflake(args.snowflake)
     same = iceberg_side == snowflake_side
-    print(json.dumps({"iceberg": iceberg_side.as_dict(), "snowflake": snowflake_side.as_dict(), "match": same}, indent=2))
+    print(
+        json.dumps({"iceberg": iceberg_side.as_dict(), "snowflake": snowflake_side.as_dict(), "match": same}, indent=2)
+    )
     return 0 if same else 1
 
 

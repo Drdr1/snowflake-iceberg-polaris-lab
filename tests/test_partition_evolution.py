@@ -10,7 +10,6 @@ from __future__ import annotations
 import datetime as dt
 
 import pyarrow.compute as pc
-
 from pyiceberg.expressions import And, EqualTo, GreaterThanOrEqual, LessThan
 from pyiceberg.transforms import BucketTransform, DayTransform, IdentityTransform, MonthTransform
 
@@ -87,7 +86,7 @@ def test_add_identity_and_bucket_fields(catalog, table_id):
     t.append(orders(100, start_id=101))
 
     specs = files_per_spec(t)
-    assert specs[0] == 1          # the original unpartitioned file
+    assert specs[0] == 1  # the original unpartitioned file
     assert sum(specs.values()) > 2  # new data split by region/bucket
     eu = t.scan(row_filter=EqualTo("region", "eu-central")).to_arrow()
     assert set(eu["region"].to_pylist()) == {"eu-central"}

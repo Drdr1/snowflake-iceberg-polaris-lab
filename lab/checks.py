@@ -13,7 +13,6 @@ from decimal import Decimal
 
 import pyarrow as pa
 import pyarrow.compute as pc
-
 from pyiceberg.table import Table
 
 

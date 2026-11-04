@@ -1,7 +1,7 @@
 """Print a table's current metadata file, for Snowflake OBJECT_STORE tables.
 
-    python -m lab.locate lab.orders            # path relative to the bucket
-    python -m lab.locate lab.orders --full     # full s3:// URI
+python -m lab.locate lab.orders            # path relative to the bucket
+python -m lab.locate lab.orders --full     # full s3:// URI
 """
 
 from __future__ import annotations

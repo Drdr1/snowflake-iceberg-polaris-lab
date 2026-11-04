@@ -9,6 +9,7 @@ Runs only with LAB_CATALOG=rest and LAB_SPARK=1 (the CI "stack" job).
 
 from __future__ import annotations
 
+import datetime as _dt
 import os
 import uuid
 
@@ -17,6 +18,12 @@ import pytest
 from lab.catalog import NAMESPACE, catalog_kind
 from lab.checks import fingerprint, metadata_consistency
 from lab.data import orders
+
+
+def _utc_now() -> str:
+    # Iceberg procedure arguments must be literals, not current_timestamp().
+    return _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+
 
 pytestmark = [
     pytest.mark.spark,
@@ -114,10 +121,7 @@ def test_spark_compaction_and_expiry(spark, catalog, ident):
     fp_before = fingerprint(before)
     assert files_before >= 8
 
-    spark.sql(
-        f"CALL polaris.system.rewrite_data_files(table => '{ident}', "
-        f"options => map('min-input-files', '2'))"
-    )
+    spark.sql(f"CALL polaris.system.rewrite_data_files(table => '{ident}', options => map('min-input-files', '2'))")
     after = catalog.load_table(ident)
     assert after.inspect.files().num_rows < files_before
     assert fingerprint(after) == fp_before
@@ -126,7 +130,7 @@ def test_spark_compaction_and_expiry(spark, catalog, ident):
     snaps_before = len(after.snapshots())
     spark.sql(
         f"CALL polaris.system.expire_snapshots(table => '{ident}', "
-        f"older_than => current_timestamp(), retain_last => 1)"
+        f"older_than => TIMESTAMP '{_utc_now()}', retain_last => 1)"
     )
     final = catalog.load_table(ident)
     assert len(final.snapshots()) < snaps_before

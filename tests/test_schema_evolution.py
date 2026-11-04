@@ -10,7 +10,6 @@ from __future__ import annotations
 import pyarrow as pa
 import pyarrow.compute as pc
 import pytest
-
 from pyiceberg.exceptions import ValidationError
 from pyiceberg.types import IntegerType, LongType, StringType
 
