@@ -6,7 +6,7 @@
 
 services:
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: &minio_image minio/minio:${MINIO_TAG:-RELEASE.2025-04-22T22-12-26Z}
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # console
@@ -15,13 +15,14 @@ services:
       MINIO_ROOT_PASSWORD: m1n1opwd
     command: ["server", "/data", "--console-address", ":9001"]
     healthcheck:
-      test: ["CMD", "curl", "--fail", "http://127.0.0.1:9000/minio/health/live"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 2s
       timeout: 10s
       retries: 30
 
   create-bucket:
-    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
+    # The MinIO server image ships the mc client, so no second image to pull.
+    image: *minio_image
     depends_on:
       minio:
         condition: service_healthy

@@ -95,6 +95,6 @@ For the live Snowflake + S3 path, follow [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 Apache Iceberg 1.10.1 (Spark runtime) · Spark 3.5.9 · PyIceberg 0.12.0 ·
 Apache Polaris (Docker image `apache/polaris`, pin with `POLARIS_VERSION`) ·
-MinIO RELEASE.2025-09-07.
+MinIO RELEASE.2025-04-22 (Docker Hub).
 
 MinIO is only a local stand-in for S3. The live path uses AWS S3.
