@@ -50,6 +50,12 @@ jobs:
       - name: Same Iceberg tests, now against Polaris REST + RustFS
         env:
           LAB_CATALOG: rest
+          # Only for the catalog-less static read: without a catalog there are
+          # no vended credentials, so the reader needs its own storage keys.
+          S3_ENDPOINT: http://localhost:9000
+          AWS_ACCESS_KEY_ID: rustfsadmin
+          AWS_SECRET_ACCESS_KEY: rustfsadmin
+          AWS_REGION: us-west-2
         run: python -m pytest -v -m "not spark"
 
       - name: Spark <-> PyIceberg interop through Polaris

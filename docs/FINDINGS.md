@@ -39,6 +39,11 @@ What has actually been run, where, and what it showed. Nothing goes in the
   longer be read.
 - **A stale writer cannot overwrite a newer commit.** The catalog validates
   the writer's base snapshot, so no rows are lost when two engines write.
+- **A catalog-less read needs its own storage credentials.** Reading a table
+  straight from its metadata.json (how outside engines read Snowflake-managed
+  tables) bypasses Polaris, so there is no credential vending: the first CI
+  run failed with S3 `ACCESS_DENIED` until the reader got its own keys. Plan
+  IAM for that read path separately.
 - **The consistency checker** cross-checks the snapshot summary, manifest
   record counts and an actual scan, and detects data files missing from
   storage before a scan fails on them.
