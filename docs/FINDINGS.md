@@ -5,7 +5,7 @@ What has actually been run, where, and what it showed. Nothing goes in the
 
 ## Status
 
-| Area | Local SQL catalog | Polaris + MinIO + Spark (CI) | Live Snowflake trial + S3 |
+| Area | Local SQL catalog | Polaris + RustFS + Spark (CI) | Live Snowflake trial + S3 |
 |---|---|---|---|
 | Schema evolution (add / rename / widen / drop + re-add / reorder) | ✅ tests | ✅ tests (also via Spark DDL) | ⏳ pending |
 | Partition evolution (month → day, identity + bucket) | ✅ tests | ✅ tests (Spark `REPLACE PARTITION FIELD`) | ⏳ pending |

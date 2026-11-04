@@ -21,7 +21,7 @@ It answers the practical questions an open-lakehouse POC has to answer:
 | Layer | How it runs | Status |
 |---|---|---|
 | Iceberg behaviour (schema, partitions, snapshots, consistency) | PyIceberg tests on a local SQL catalog | CI, every push |
-| Same tests against **Polaris REST + MinIO (S3 API)** | `docker compose` in GitHub Actions | CI, every push |
+| Same tests against **Polaris REST + RustFS (S3 API)** | `docker compose` in GitHub Actions | CI, every push |
 | **Spark ⇄ PyIceberg** interop, compaction, expiry, concurrent writers | Spark 3.5 + Iceberg 1.10.1 in CI | CI, every push |
 | Polaris RBAC: Snowflake's principal is read-only | `polaris/check_reader.sh` in CI | CI, every push |
 | **Snowflake** external volume, REST catalog integration, catalog-linked DB, managed Iceberg | SQL in `snowflake/`, run against a trial account | Written; live results in [docs/FINDINGS.md](docs/FINDINGS.md) |
@@ -41,7 +41,7 @@ actually been run.
    (tests, checks)      +-------------+-------------+
                                       | table-scoped temporary credentials
                                       v
-                         S3 (MinIO locally, AWS S3 live)
+                         S3 (RustFS locally, AWS S3 live)
                          s3://bucket/lab_catalog/lab/orders/{data,metadata}
                                       ^
              Snowflake-managed Iceberg tables (CATALOG='SNOWFLAKE')
@@ -67,7 +67,7 @@ docs/           RUNBOOK.md (step by step) and FINDINGS.md (results)
 pip install -r requirements.txt
 python -m pytest -v                      # local, no Docker, no accounts
 
-docker compose up -d --wait              # MinIO + Polaris
+docker compose up -d --wait              # RustFS + Polaris
 bash polaris/bootstrap.sh
 LAB_CATALOG=rest python -m pytest -v -m "not spark"
 ```
@@ -95,6 +95,6 @@ For the live Snowflake + S3 path, follow [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 Apache Iceberg 1.10.1 (Spark runtime) · Spark 3.5.9 · PyIceberg 0.12.0 ·
 Apache Polaris (Docker image `apache/polaris`, pin with `POLARIS_VERSION`) ·
-MinIO RELEASE.2025-04-22 (Docker Hub).
+RustFS 1.0.0-alpha.80.
 
-MinIO is only a local stand-in for S3. The live path uses AWS S3.
+RustFS is only a local stand-in for S3 (MinIO images are no longer pullable). The live path uses AWS S3.

@@ -23,7 +23,7 @@ def load_static(metadata_uri: str) -> StaticTable:
     props = {}
     if os.environ.get("AWS_REGION"):
         props["s3.region"] = os.environ["AWS_REGION"]
-    if os.environ.get("S3_ENDPOINT"):  # MinIO
+    if os.environ.get("S3_ENDPOINT"):  # RustFS
         props["s3.endpoint"] = os.environ["S3_ENDPOINT"]
     return StaticTable.from_metadata(metadata_uri, properties=props)
 

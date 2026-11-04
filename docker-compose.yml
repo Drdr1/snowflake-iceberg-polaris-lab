@@ -1,37 +1,45 @@
-# Local stand-in for the AWS side: MinIO plays S3, Apache Polaris is the
+# Local stand-in for the AWS side: RustFS plays S3, Apache Polaris is the
 # Iceberg REST catalog. Spark and PyIceberg run on the host and talk to both.
 #
-# Based on Apache Polaris' own MinIO guide (site/content/guides/minio).
+# Based on Apache Polaris' own RustFS guide (site/content/guides/rustfs).
+# (MinIO's public container images are no longer pullable, hence RustFS.)
 # Credentials below are lab-only defaults; never reuse them anywhere real.
 
 services:
-  minio:
-    image: &minio_image minio/minio:${MINIO_TAG:-RELEASE.2025-04-22T22-12-26Z}
+  rustfs:
+    image: rustfs/rustfs:${RUSTFS_TAG:-1.0.0-alpha.80}
     ports:
       - "9000:9000"   # S3 API
       - "9001:9001"   # console
     environment:
-      MINIO_ROOT_USER: minio_root
-      MINIO_ROOT_PASSWORD: m1n1opwd
-    command: ["server", "/data", "--console-address", ":9001"]
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ENABLE: "true"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 2s
+      test: ["CMD-SHELL", "curl --fail http://127.0.0.1:9000/health"]
+      interval: 3s
       timeout: 10s
       retries: 30
+      start_period: 10s
 
   create-bucket:
-    # The MinIO server image ships the mc client, so no second image to pull.
-    image: *minio_image
+    image: amazon/aws-cli:2.34.9
     depends_on:
-      minio:
+      rustfs:
         condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: rustfsadmin
+      AWS_SECRET_ACCESS_KEY: rustfsadmin
+      AWS_ENDPOINT_URL: http://rustfs:9000
+      AWS_REGION: us-west-2
     entrypoint: ["/bin/sh", "-c"]
     command:
       - >-
-        mc alias set lab http://minio:9000 minio_root m1n1opwd &&
-        mc mb --ignore-existing lab/lakehouse &&
-        echo bucket ready
+        (aws s3api head-bucket --bucket lakehouse 2>/dev/null || aws s3 mb s3://lakehouse) &&
+        aws s3 ls && echo bucket ready
 
   polaris:
     image: apache/polaris:${POLARIS_VERSION:-latest}
@@ -39,16 +47,16 @@ services:
       - "8181:8181"   # Iceberg REST + management API
       - "8182:8182"   # health / metrics
     depends_on:
-      minio:
+      rustfs:
         condition: service_healthy
       create-bucket:
         condition: service_completed_successfully
     environment:
       AWS_REGION: us-west-2
-      # Polaris uses these against MinIO's STS to vend scoped credentials,
+      # Polaris uses these to vend scoped credentials to engines,
       # the same mechanism Snowflake uses with VENDED_CREDENTIALS.
-      AWS_ACCESS_KEY_ID: minio_root
-      AWS_SECRET_ACCESS_KEY: m1n1opwd
+      AWS_ACCESS_KEY_ID: rustfsadmin
+      AWS_SECRET_ACCESS_KEY: rustfsadmin
       POLARIS_BOOTSTRAP_CREDENTIALS: POLARIS,root,s3cr3t
       polaris.realm-context.realms: POLARIS
       quarkus.otel.sdk.disabled: "true"

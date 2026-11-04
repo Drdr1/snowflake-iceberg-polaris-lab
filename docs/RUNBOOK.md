@@ -11,7 +11,7 @@ pip install -r requirements.txt
 python -m pytest -v                    # Iceberg behaviour on a local SQL catalog
 ```
 
-With Docker, the full local stack (MinIO as S3, Polaris as REST catalog):
+With Docker, the full local stack (RustFS as S3, Polaris as REST catalog):
 
 ```bash
 docker compose up -d --wait

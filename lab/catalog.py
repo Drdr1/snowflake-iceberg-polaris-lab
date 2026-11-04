@@ -4,7 +4,7 @@ The same tests run against two catalogs:
 
 * ``sql``  - a local SQLite-backed Iceberg catalog with a file warehouse.
              Needs nothing but Python. This is what runs on a laptop.
-* ``rest`` - Apache Polaris (Iceberg REST catalog) with MinIO as S3.
+* ``rest`` - Apache Polaris (Iceberg REST catalog) with RustFS as S3.
              This is what runs in CI after ``docker compose up``.
 
 Pick one with ``LAB_CATALOG=sql|rest``. Defaults to ``sql``.
@@ -30,7 +30,7 @@ def catalog_kind() -> str:
 def rest_properties() -> dict[str, str]:
     """Properties for Polaris. Mirrors the Spark config in spark/session.py.
 
-    S3_ENDPOINT defaults to local MinIO. Set it to an empty string for real
+    S3_ENDPOINT defaults to local RustFS. Set it to an empty string for real
     AWS S3, where the endpoint and credentials come from Polaris.
     """
     props = {

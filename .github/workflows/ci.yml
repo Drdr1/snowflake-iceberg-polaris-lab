@@ -18,7 +18,7 @@ jobs:
       - run: python -m pytest -v
 
   stack:
-    name: Polaris + MinIO + Spark interop
+    name: Polaris + RustFS + Spark interop
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -31,7 +31,7 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Start MinIO + Polaris
+      - name: Start RustFS + Polaris
         run: docker compose up -d --wait
 
       - name: Show versions
@@ -47,7 +47,7 @@ jobs:
 
       - run: pip install -r requirements.txt -r requirements-spark.txt
 
-      - name: Same Iceberg tests, now against Polaris REST + MinIO
+      - name: Same Iceberg tests, now against Polaris REST + RustFS
         env:
           LAB_CATALOG: rest
         run: python -m pytest -v -m "not spark"

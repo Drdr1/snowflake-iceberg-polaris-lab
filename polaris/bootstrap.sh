@@ -4,7 +4,7 @@
 #   - snowflake_reader principal  -> read-only, the identity Snowflake uses
 #
 # Works for both setups:
-#   local MinIO (default)  : S3_ENDPOINT=http://localhost:9000, internal http://minio:9000
+#   local RustFS (default)  : S3_ENDPOINT=http://localhost:9000, internal http://rustfs:9000
 #   real AWS S3            : set STORAGE_ROLE_ARN (and optionally STORAGE_EXTERNAL_ID),
 #                            leave S3_ENDPOINT empty. See docs/RUNBOOK.md step 3.
 #
@@ -18,7 +18,7 @@ CATALOG="${POLARIS_CATALOG:-lab_catalog}"
 BASE_LOCATION="${BASE_LOCATION:-s3://lakehouse/lab_catalog}"
 AWS_REGION="${AWS_REGION:-us-west-2}"
 S3_ENDPOINT="${S3_ENDPOINT-http://localhost:9000}"
-S3_ENDPOINT_INTERNAL="${S3_ENDPOINT_INTERNAL-http://minio:9000}"
+S3_ENDPOINT_INTERNAL="${S3_ENDPOINT_INTERNAL-http://rustfs:9000}"
 STORAGE_ROLE_ARN="${STORAGE_ROLE_ARN:-}"
 STORAGE_EXTERNAL_ID="${STORAGE_EXTERNAL_ID:-}"
 READER_ENV_FILE="${READER_ENV_FILE:-.polaris-reader.env}"
